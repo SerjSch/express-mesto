@@ -1,29 +1,31 @@
 const User = require("../models/user");
 
-//////////////// Get //////////////////////
+////////////////   Get   //////////////////////
+
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.status(200).send({ users }))
     .catch(() =>
-      res.status(500).send({
-        message: "ошибка по-умолчанию, внутренняя ошибка сервера",
-      })
+      res
+        .status(500)
+        .send({ message: "ошибка по-умолчанию, внутренняя ошибка сервера" })
     );
 };
 
 const getUser = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => res.status(200).send({ user }))
+    .orFail(new Error("NotValidId"))
+    .then((user) => res.status(200).send(user))
     .catch((error) => {
-      const error_code = 404;
-      if (error.name === "CastError")
-        return res
-          .status(error_code)
+      if (error.message === "NotValidId") {
+        res
+          .status(404)
           .send({ message: "404 — Пользователь по указанному _id не найден" });
-      else
+      } else {
         res
           .status(500)
           .send({ message: "ошибка по-умолчанию, внутренняя ошибка сервера" });
+      }
     });
 };
 
@@ -43,21 +45,26 @@ const createUser = (req, res) => {
       const error_code = 400;
       if (error.name === "CastError")
         return res.status(error_code).send({
-          message: "Переданы некорректные данные при создании пользователя" });
-          else
-          res
-            .status(500)
-            .send({ message: "ошибка по-умолчанию, внутренняя ошибка сервера" });
-      });
-  };
+          message: "Переданы некорректные данные при создании пользователя",
+        });
+      else
+        res
+          .status(500)
+          .send({ message: "ошибка по-умолчанию, внутренняя ошибка сервера" });
+    });
+};
 
 ////////////////patch/////////////////////////////
 
 const updateUserInfo = (req, res) => {
-  User.findByIdAndUpdate(req.user._id, {
-    name: req.body.name,
-    about: req.body.about,
-  })
+  User.findByIdAndUpdate(
+    req.user._id,
+    {
+      name: req.body.name,
+      about: req.body.about,
+    },
+    { new: true, runValidators: true }
+  )
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === "ValidatorError")
@@ -76,7 +83,11 @@ const updateUserInfo = (req, res) => {
 };
 
 const updateUserAvatar = (req, res) => {
-  User.findByIdAndUpdate(req.user._id, { avatar: req.body.avatar })
+  User.findByIdAndUpdate(
+    req.user._id,
+    { avatar: req.body.avatar },
+    { new: true, runValidators: true }
+  )
     .then((user) => {
       res.status(200).send({ data: user });
     })

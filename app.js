@@ -1,32 +1,37 @@
 const express = require("express");
-const bodyParser = require('body-parser')
-const path = require('path')
-const usersRouter = require('./routes/users');
-const cardRouter = require('./routes/cards');
+const bodyParser = require("body-parser");
+const path = require("path");
+const router = require("express").Router();
+const usersRouter = require("./routes/users");
+const cardRouter = require("./routes/cards");
 const mongoose = require("mongoose");
 
 const app = express();
 // Слушаем 3000 порт
-const PORT = 3000
+const PORT = 3000;
 
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 
 app.use((req, res, next) => {
   req.user = {
-    _id: '60cbc5a42ba1681e90b12314' // вставьте сюда _id созданного в предыдущем пункте пользователя
+    _id: "60cbc5a42ba1681e90b12314", // вставьте сюда _id созданного в предыдущем пункте пользователя
   };
   next();
 });
 
-app.use('/', usersRouter); // запускаем
-app.use('/', cardRouter); // запускаем
+app.use("/", usersRouter); // запускаем
+app.use("/", cardRouter); // запускаем
+
+app.get("*", function (req, res) {
+  res
+    .status(404)
+    .send({ message: 'Запрашиваемый ресурс не найден'});
+});
 
 console.log("ПРИВЭТ!");
-
-
 
 mongoose.connect("mongodb://localhost:27017/mestodb", {
   useNewUrlParser: true,
