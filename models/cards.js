@@ -1,5 +1,6 @@
-const mongoose = require("mongoose");
-const user = require("./user.js");
+const mongoose = require('mongoose');
+const user = require('./user');
+
 const cardSchema = mongoose.Schema({
   name: {
     type: String,
@@ -28,4 +29,4 @@ const cardSchema = mongoose.Schema({
     default: Date.now,
   },
 });
-module.exports = mongoose.model("card", cardSchema);
+module.exports = mongoose.model('card', cardSchema);

@@ -1,35 +1,36 @@
-const User = require("../models/user");
+const User = require('../models/user');
 
-////////////////   Get   //////////////////////
+/// /////////////   Get   //////////////////////
 
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.status(200).send({ users }))
-    .catch(() =>
-      res
-        .status(500)
-        .send({ message: "ошибка по-умолчанию, внутренняя ошибка сервера" })
-    );
+    .catch(() => res
+      .status(500)
+      .send({ message: 'ошибка по-умолчанию, внутренняя ошибка сервера' }));
 };
 
 const getUser = (req, res) => {
   User.findById(req.params.userId)
-    .orFail(new Error("NotValidId"))
+    .orFail(new Error('NotFound'))
+
     .then((user) => res.status(200).send(user))
     .catch((error) => {
-      if (error.message === "NotValidId") {
+      if (error.name === 'CastError') {
+        res.status(400).send({ message: '400 — Переданы некорректные данные' });
+      } else if (error.message === 'NotFound') {
         res
           .status(404)
-          .send({ message: "404 — Пользователь по указанному _id не найден" });
+          .send({ message: '404 — Пользователь по указанному _id не найден' });
       } else {
         res
           .status(500)
-          .send({ message: "ошибка по-умолчанию, внутренняя ошибка сервера" });
+          .send({ message: 'ошибка по-умолчанию, внутренняя ошибка сервера' });
       }
     });
 };
 
-/////////////post////////////////////
+/// //////////post////////////////////
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
@@ -42,20 +43,19 @@ const createUser = (req, res) => {
       res.send(userData);
     })
     .catch((error) => {
-      const error_code = 400;
-      if (error.name === "CastError")
-        return res.status(error_code).send({
-          message: "Переданы некорректные данные при создании пользователя",
+      if (error.name === 'CastError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные при создании пользователя',
         });
-      else
+      } else {
         res
           .status(500)
-          .send({ message: "ошибка по-умолчанию, внутренняя ошибка сервера" });
+          .send({ message: 'ошибка по-умолчанию, внутренняя ошибка сервера' });
+      }
     });
 };
 
-////////////////patch/////////////////////////////
-
+/// ////////////// PATCH /users/me — обновляет профиль/////////////////////////
 const updateUserInfo = (req, res) => {
   User.findByIdAndUpdate(
     req.user._id,
@@ -63,50 +63,57 @@ const updateUserInfo = (req, res) => {
       name: req.body.name,
       about: req.body.about,
     },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   )
-    .then((user) => res.send({ data: user }))
+    .orFail(new Error('NotFound'))
+
+    .then((user) => res.status(200).send(user))
     .catch((error) => {
-      if (error.name === "ValidatorError")
-        return res.status(400).send({
-          message: "Переданы некорректные данные при обновлении профиля",
+      if (error.name === 'ValidationError') {
+        res.status(400).send({
+          message:
+            '400 — Переданы некорректные данные при обновлении профиля ValidationError',
         });
-      if (error.name === "CastError")
-        return res.status(404).send({
-          message: "404 — Пользователь с указанным _id не найден",
-        });
-      else
+      } else if (error.message === 'NotFound') {
+        res
+          .status(404)
+          .send({ message: '404 — Пользователь по указанному _id не найден' });
+      } else {
         res
           .status(500)
-          .send({ message: "ошибка по-умолчанию, внутренняя ошибка сервера" });
+          .send({ message: 'ошибка по-умолчанию, внутренняя ошибка сервера' });
+      }
     });
 };
 
+/// PATCH /users/me/avatar — обновляет аватар ///////////////////////////////////
 const updateUserAvatar = (req, res) => {
   User.findByIdAndUpdate(
     req.user._id,
     { avatar: req.body.avatar },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   )
     .then((user) => {
       res.status(200).send({ data: user });
     })
     .catch((error) => {
-      if (error.name === "ValidatorError")
-        return res.status(400).send({
-          message: "Переданы некорректные данные при обновлении профиля",
+      if (error.name === 'ValidationError') {
+        res.status(400).send({
+          message:
+            '400 — Переданы некорректные данные при обновлении профиля ValidationError',
         });
-      if (error.name === "CastError")
-        return res.status(404).send({
-          message: "404 — Пользователь с указанным _id не найден",
-        });
-      else
+      } else if (error.message === 'NotFound') {
+        res
+          .status(404)
+          .send({ message: '404 — Пользователь по указанному _id не найден' });
+      } else {
         res
           .status(500)
-          .send({ message: "ошибка по-умолчанию, внутренняя ошибка сервера" });
+          .send({ message: 'ошибка по-умолчанию, внутренняя ошибка сервера' });
+      }
     });
 };
-
+/// /////////////////////////////////////////////////////////////////////////////
 module.exports = {
   getUsers,
   getUser,
