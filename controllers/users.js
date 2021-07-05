@@ -1,4 +1,6 @@
 const User = require('../models/user');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 /// /////////////   Get   //////////////////////
 
@@ -32,15 +34,22 @@ const getUser = (req, res) => {
 
 /// //////////post////////////////////
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const {
+    name, about, avatar, email,
+  } = req.body;
+
+    bcrypt.hash(req.body.password, 10)
+    .then((hash) => User.create({
+    name, about, avatar, email, password: hash,
+  })
     .then((user) => {
       const userData = {
         name: user.name,
         about: user.about,
         avatar: user.avatar,
+        email: user.email,
       };
-      res.send(userData);
+      res.status(200).send(userData);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
@@ -113,6 +122,28 @@ const updateUserAvatar = (req, res) => {
       }
     });
 };
+
+// controllers/users.js
+
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      // аутентификация успешна! пользователь в переменной user
+    })
+    .catch((err) => {
+      // ошибка аутентификации
+      res
+        .status(401)
+        .send({ message: err.message });
+    });
+};
+
+
+
+
+
 /// /////////////////////////////////////////////////////////////////////////////
 module.exports = {
   getUsers,
@@ -120,4 +151,5 @@ module.exports = {
   createUser,
   updateUserInfo,
   updateUserAvatar,
+  login,
 };
