@@ -24,7 +24,7 @@ const getUser = (req, res, next) => {
         throw new BadRequestError('400 — Переданы некорректные данные');
       } else if (error.message === 'NotFound') {
         throw new NotFoundError(
-          '404 — Пользователь по указанному _id не найден'
+          '404 — Пользователь по указанному _id не найден',
         );
       }
     })
@@ -40,31 +40,31 @@ const getAuthUser = (req, res, next) => {
 
 /// //////////post////////////////////
 const createUser = (req, res, next) => {
-  const { name, about, avatar, email } = req.body;
+  const {
+    name, about, avatar, email,
+  } = req.body;
 
   bcrypt
     .hash(req.body.password, 10)
-    .then((hash) =>
-      User.create({
-        name,
-        about,
-        avatar,
-        email,
-        password: hash,
-      }).then((user) => {
-        const userData = {
-          name: user.name,
-          about: user.about,
-          avatar: user.avatar,
-          email: user.email,
-        };
-        res.status(200).send(userData);
-      })
-    )
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }).then((user) => {
+      const userData = {
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+      };
+      res.status(200).send(userData);
+    }))
     .catch((error) => {
       if (error.name === 'CastError') {
         throw new BadRequestError(
-          'Переданы некорректные данные при создании пользователя'
+          'Переданы некорректные данные при создании пользователя',
         );
       }
       if (error.name === 'MongoError' || error.code === '11000') {
@@ -82,18 +82,18 @@ const updateUserInfo = (req, res, next) => {
       name: req.body.name,
       about: req.body.about,
     },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   )
     .orFail(new Error('NotFound'))
     .then((user) => res.status(200).send(user))
     .catch((error) => {
       if (error.name === 'ValidationError') {
         throw new BadRequestError(
-          '400 — Переданы некорректные данные при обновлении профиля ValidationError'
+          '400 — Переданы некорректные данные при обновлении профиля ValidationError',
         );
       } else if (error.message === 'NotFound') {
         throw new NotFoundError(
-          '404 — Пользователь по указанному _id не найден'
+          '404 — Пользователь по указанному _id не найден',
         );
       }
     })
@@ -105,7 +105,7 @@ const updateUserAvatar = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { avatar: req.body.avatar },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   )
     .then((user) => {
       res.status(200).send({ data: user });
@@ -113,11 +113,11 @@ const updateUserAvatar = (req, res, next) => {
     .catch((error) => {
       if (error.name === 'ValidationError') {
         throw new BadRequestError(
-          '400 — Переданы некорректные данные при обновлении аватара ValidationError'
+          '400 — Переданы некорректные данные при обновлении аватара ValidationError',
         );
       } else if (error.message === 'NotFound') {
         throw new NotFoundError(
-          '404 — Пользователь по указанному _id не найден'
+          '404 — Пользователь по указанному _id не найден',
         );
       }
     })
@@ -134,7 +134,7 @@ const login = (req, res, next) => {
       const token = jwt.sign(
         { _id: user._id },
         NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
-        { expiresIn: '7d' }
+        { expiresIn: '7d' },
       );
       return res.send({ token });
     })

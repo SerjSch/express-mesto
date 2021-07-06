@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /* eslint-disable func-names */
 const mongoose = require('mongoose');
 const validator = require('validator');
@@ -22,6 +23,12 @@ const userSchema = mongoose.Schema({
     type: String,
     required: false,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate: {
+      validator(v) {
+        return /^https?:\/\/(www\.)?([a-zA-Z0-9\-])+\.([a-zA-Z])+\/?([a-zA-Z0-9\-\._~:\/\?#\[\]@!\$&’\(\)\*\+,;=]+)/.test(v);
+      },
+      message: (props) => `Ошибка в ссылке ${props.value}`,
+    },
   },
   email: {
     type: String,
