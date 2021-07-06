@@ -1,8 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const { login, createUser } = require('./controllers/users');
 const usersRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
+const auth = require('./middlewares/auth');
 
 const app = express();
 // Слушаем 3000 порт
@@ -13,13 +16,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
 app.use(bodyParser.json());
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '60cbc5a42ba1681e90b12314', // вставьте сюда _id созданного в предыдущем пункте пользователя
-  };
-  next();
-});
+app.post('/signin', login);
+app.post('/signup', createUser);
 
+app.use(auth);
 app.use('/', usersRouter); // запускаем
 app.use('/', cardRouter); // запускаем
 

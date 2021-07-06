@@ -27,9 +27,15 @@ const createCard = (req, res) => {
 };
 /// //////////////DELETE /cards/:cardId — удаляет карточку по идентификатору
 const deleteCard = (req, res) => {
-  Card.findByIdAndDelete(req.params.cardId)
+  const owner = req.user._id;
+  Card.findById(req.params.cardId)
     .orFail(new Error('NotFound'))
-    .then(() => res.status(200).send({ message: 'Карточка удалена' }))
+    .then((card) => {
+      if (card.owner.toString() !== owner) {
+        res.status(403).send({ message: '403 — Это не ваша карточка' });
+      }
+      Card.findByIdAndDelete(req.params.cardId).then(() => res.status(200).send({ message: 'Карточка удалена' }));
+    })
     .catch((error) => {
       if (error.name === 'CastError') {
         res.status(400).send({
@@ -46,6 +52,7 @@ const deleteCard = (req, res) => {
       }
     });
 };
+
 /// ///////////////// PUT /cards/:cardId/likes — поставить лайк карточке
 const likeCard = (req, res) => {
   Card.findByIdAndUpdate(

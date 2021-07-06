@@ -1,6 +1,7 @@
-const User = require('../models/user');
+/* eslint-disable no-undef */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
 
 /// /////////////   Get   //////////////////////
 
@@ -32,15 +33,38 @@ const getUser = (req, res) => {
     });
 };
 
+const getAuthUser = (req, res) => {
+  User.findById(req.params.userId)
+    .orFail(new Error('NotFound'))
+
+    .then((user) => res.status(200).send(user))
+    .catch((error) => {
+      if (error.name === 'CastError') {
+        res.status(400).send({ message: '400 — Переданы некорректные данные' });
+      } else if (error.message === 'NotFound') {
+        res
+          .status(404)
+          .send({ message: '404 — Пользователь по указанному _id не найден' });
+      } else {
+        res
+          .status(500)
+          .send({ message: 'ошибка по-умолчанию, внутренняя ошибка сервера' });
+      }
+    });
+};
+
 /// //////////post////////////////////
 const createUser = (req, res) => {
   const {
     name, about, avatar, email,
   } = req.body;
 
-    bcrypt.hash(req.body.password, 10)
-    .then((hash) => User.create({
-    name, about, avatar, email, password: hash,
+  bcrypt.hash(req.body.password, 10).then((hash) => User.create({
+    name,
+    about,
+    avatar,
+    email,
+    password: hash,
   })
     .then((user) => {
       const userData = {
@@ -57,11 +81,11 @@ const createUser = (req, res) => {
           message: 'Переданы некорректные данные при создании пользователя',
         });
       } else {
-        res
-          .status(500)
-          .send({ message: 'ошибка по-умолчанию, внутренняя ошибка сервера' });
+        res.status(500).send({
+          message: 'ошибка по-умолчанию, внутренняя ошибка сервера',
+        });
       }
-    });
+    }));
 };
 
 /// ////////////// PATCH /users/me — обновляет профиль/////////////////////////
@@ -130,19 +154,18 @@ const login = (req, res) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      // аутентификация успешна! пользователь в переменной user
+      const token = jwt.sign(
+        { _id: user._id },
+        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+        { expiresIn: '7d' },
+      );
+      return res.send({ token });
     })
     .catch((err) => {
       // ошибка аутентификации
-      res
-        .status(401)
-        .send({ message: err.message });
+      res.status(401).send({ message: err.message });
     });
 };
-
-
-
-
 
 /// /////////////////////////////////////////////////////////////////////////////
 module.exports = {
@@ -152,4 +175,5 @@ module.exports = {
   updateUserInfo,
   updateUserAvatar,
   login,
+  getAuthUser,
 };
