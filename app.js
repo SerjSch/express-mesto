@@ -47,6 +47,7 @@ app.use('/', usersRouter); // запускаем
 app.use('/', cardRouter); // запускаем
 
 // обработчики ошибок
+// eslint-disable-next-line no-unused-vars
 app.get('*', (req, res) => {
   throw new NotFoundError('404 - Запрашиваемый ресурс не найден');
 });
