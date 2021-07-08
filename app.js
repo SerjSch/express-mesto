@@ -8,6 +8,7 @@ const { login, createUser } = require('./controllers/users');
 const usersRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 const auth = require('./middlewares/auth');
+const NotFoundError = require('./errors/404-not-found-err');
 
 const app = express();
 // Слушаем 3000 порт
@@ -47,12 +48,13 @@ app.use('/', cardRouter); // запускаем
 
 // обработчики ошибок
 app.get('*', (req, res) => {
-  res.status(404).send({ message: 'Запрашиваемый ресурс не найден' });
+  throw new NotFoundError('404 - Запрашиваемый ресурс не найден');
 });
 app.use(errors()); // обработчик ошибок celebrate
 
 // здесь обрабатываем все ошибки
-app.use((err, req, res) => {
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
   res
     .status(statusCode)

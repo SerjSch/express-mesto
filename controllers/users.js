@@ -7,6 +7,8 @@ const ConflictError = require('../errors/409-conflict-err');
 const BadRequestError = require('../errors/400-bad-request-err');
 const UnauthorizedError = require('../errors/401-unauthorized-err');
 
+const { NODE_ENV, JWT_SECRET } = process.env;
+
 /// /////////////   Get   //////////////////////
 
 const getUsers = (req, res, next) => {
