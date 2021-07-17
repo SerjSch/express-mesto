@@ -9,6 +9,7 @@ const usersRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 const auth = require('./middlewares/auth');
 const NotFoundError = require('./errors/404-not-found-err');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const app = express();
 // Слушаем 3000 порт
@@ -24,6 +25,8 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
 app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
 app.use(bodyParser.json());
+
+app.use(requestLogger); // подключаем логгер запросов
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -51,6 +54,9 @@ app.use('/', cardRouter); // запускаем
 app.get('*', (req, res) => {
   throw new NotFoundError('404 - Запрашиваемый ресурс не найден');
 });
+
+app.use(errorLogger); // подключаем логгер ошибок
+
 app.use(errors()); // обработчик ошибок celebrate
 
 // здесь обрабатываем все ошибки
